@@ -1,0 +1,51 @@
+version: '3'
+services:
+
+  manager-nginx:
+    container_name: transition_nginx
+    build:
+      context: ./docker/nginx/development
+      dockerfile: nginx.docker
+    volumes:
+      - "./manager:/var/www/html"
+    restart: always
+    depends_on:
+      - manager-php
+    ports:
+      - "80:80"
+      - "443:443"
+    networks:
+      - internal
+    environment:
+      - NGINX_HOST=localhost
+
+  manager-php:
+    container_name: transition_php
+    build:
+      context: ./docker/php/development
+    working_dir: /var/www/html
+    restart: always
+    volumes:
+      - ./manager:/var/www/html
+    networks:
+      - internal
+
+  mysql:
+    container_name: transition_mysql
+    image: mysql:8
+    restart: always
+    volumes:
+      - ./docker/mysql/data:/var/lib/mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    ports:
+      - "8989:3306"
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
